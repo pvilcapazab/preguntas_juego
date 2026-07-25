@@ -1,58 +1,49 @@
 // ============================================================
 // BANCO DE PREGUNTAS
-// Edita, agrega o quita preguntas libremente.
-// "correct" es el índice (0,1,2,3) de la respuesta correcta
-// dentro del arreglo "options".
+// Cada pregunta tiene 3 opciones fijas ("options").
+// El juego agrega automáticamente una 4ta opción en blanco para
+// que Paul o Claudia escriban su propia respuesta.
+// No hay respuesta "correcta": es para comentar en el chat.
 // ============================================================
 const QUESTIONS = [
   {
-    question: "¿Cuál es la capital de Perú?",
-    options: ["Lima", "Cusco", "Arequipa", "Trujillo"],
-    correct: 0
+    question: "¿Cuál creen que fue el mejor momento de esta semana?",
+    options: ["Una comida juntos", "Un rato viendo algo", "Un mensaje o llamada"]
   },
   {
-    question: "¿En qué planeta vivimos?",
-    options: ["Marte", "Venus", "Tierra", "Júpiter"],
-    correct: 2
+    question: "Si pudieran viajar a cualquier lugar ahora mismo, ¿a dónde irían?",
+    options: ["A la playa", "A las montañas", "A otra ciudad"]
   },
   {
-    question: "¿Cuántos lados tiene un hexágono?",
-    options: ["5", "6", "7", "8"],
-    correct: 1
+    question: "¿Qué plan les gustaría hacer el próximo fin de semana?",
+    options: ["Salir a comer", "Quedarse en casa", "Ver algo nuevo juntos"]
   },
   {
-    question: "¿Quién pintó la Mona Lisa?",
-    options: ["Van Gogh", "Picasso", "Da Vinci", "Miguel Ángel"],
-    correct: 2
+    question: "¿Cuál es el mejor recuerdo que tienen juntos?",
+    options: ["Un viaje", "Una cena", "Una sorpresa"]
   },
   {
-    question: "¿Cuál es el océano más grande del mundo?",
-    options: ["Atlántico", "Índico", "Ártico", "Pacífico"],
-    correct: 3
+    question: "¿Qué los hace reír más al otro?",
+    options: ["Un chiste tonto", "Una imitación", "Algo inesperado"]
   },
   {
-    question: "¿Cuántos huesos tiene el cuerpo humano adulto?",
-    options: ["186", "206", "226", "246"],
-    correct: 1
+    question: "¿Qué extrañan más cuando no se ven?",
+    options: ["Hablar en persona", "Un abrazo", "Hacer algo juntos"]
   },
   {
-    question: "¿En qué año llegó el hombre a la Luna?",
-    options: ["1965", "1969", "1971", "1975"],
-    correct: 1
+    question: "¿Cuál creen que es la comida favorita del otro?",
+    options: ["Algo dulce", "Algo salado", "Comida casera"]
   },
   {
-    question: "¿Cuál es el animal terrestre más rápido?",
-    options: ["León", "Guepardo", "Caballo", "Gacela"],
-    correct: 1
+    question: "¿Qué canción les recuerda al otro?",
+    options: ["Una lenta", "Una alegre", "Una que cantaron juntos"]
   },
   {
-    question: "¿Cuál es el río más largo del mundo?",
-    options: ["Nilo", "Amazonas", "Yangtsé", "Misisipi"],
-    correct: 1
+    question: "¿Qué les gustaría aprender juntos algún día?",
+    options: ["Un idioma", "Un baile", "Un deporte"]
   },
   {
-    question: "¿Cuántas cuerdas tiene una guitarra clásica?",
-    options: ["4", "5", "6", "7"],
-    correct: 2
+    question: "¿Cómo se imaginan dentro de 5 años?",
+    options: ["Viajando más", "En un lugar propio", "Igual de bien que ahora"]
   }
 ];
