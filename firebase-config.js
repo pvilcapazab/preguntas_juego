@@ -5,13 +5,14 @@
 // (En el README te explico paso a paso dónde sacarlos.)
 // ============================================================
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_PROYECTO.firebaseapp.com",
-  databaseURL: "https://TU_PROYECTO-default-rtdb.firebaseio.com",
-  projectId: "TU_PROYECTO",
-  storageBucket: "TU_PROYECTO.appspot.com",
-  messagingSenderId: "TU_SENDER_ID",
-  appId: "TU_APP_ID"
+  apiKey: "AIzaSyC2uT0RafzYQldcdxby3_VYagEgh3AjJGA",
+  authDomain: "juego-5e759.firebaseapp.com",
+  databaseURL: "https://juego-5e759-default-rtdb.firebaseio.com",
+  projectId: "juego-5e759",
+  storageBucket: "juego-5e759.firebasestorage.app",
+  messagingSenderId: "63536558150",
+  appId: "1:63536558150:web:5fb659ee8fd571fb885a47",
+  measurementId: "G-GSJK42VWHW"
 };
 
 firebase.initializeApp(firebaseConfig);
