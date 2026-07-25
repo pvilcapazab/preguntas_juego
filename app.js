@@ -10,12 +10,12 @@ const CREDENTIALS = {
 
 let currentPlayer = null;   // "paul" | "claudia"
 let otherPlayer = null;
-let selectedOption = null;  // opción elegida (aún no confirmada) en la pregunta actual
-let hasAnsweredThisRound = false;
+let lastRenderedIndex = -1;
 
 // --- Referencias de Firebase ---
 const refPlayers = db.ref("session/players");
 const refGame = db.ref("session/game");
+const refStart = db.ref("session/start");
 const refChat = db.ref("session/chat");
 
 // --- Elementos del DOM ---
@@ -29,11 +29,13 @@ const gameView = document.getElementById("game-view");
 const endView = document.getElementById("end-view");
 
 const startBtn = document.getElementById("start-btn");
+const startWaiting = document.getElementById("start-waiting");
 const restartBtn = document.getElementById("restart-btn");
 const continueBtn = document.getElementById("continue-btn");
 const waitingText = document.getElementById("waiting-text");
 const questionText = document.getElementById("question-text");
 const answersGrid = document.getElementById("answers-grid");
+const revealPanel = document.getElementById("reveal-panel");
 const qCount = document.getElementById("q-count");
 const endSummary = document.getElementById("end-summary");
 
@@ -74,7 +76,6 @@ function login(playerKey) {
   otherPlayer = playerKey === "paul" ? "claudia" : "paul";
   localStorage.setItem("dp_player", playerKey);
 
-  // Marcar presencia en Firebase
   const myRef = refPlayers.child(playerKey).child("online");
   myRef.set(true);
   myRef.onDisconnect().set(false);
@@ -84,7 +85,6 @@ function login(playerKey) {
   loginError.textContent = "";
 }
 
-// Auto-login si ya había una sesión guardada en este dispositivo
 const savedPlayer = localStorage.getItem("dp_player");
 if (savedPlayer && CREDENTIALS[savedPlayer]) {
   login(savedPlayer);
@@ -110,30 +110,46 @@ function showView(name) {
 }
 
 // ============================================================
-// JUEGO — estado compartido
+// LOBBY — ambos deben darle a "Comenzar"
 // ============================================================
 startBtn.addEventListener("click", () => {
-  refGame.set({
-    status: "playing",
-    currentIndex: 0,
-    answers: {},
-    ready: {}
-  });
+  if (!currentPlayer) return;
+  refStart.child(currentPlayer).set(true);
 });
 
 restartBtn.addEventListener("click", () => {
-  refGame.set({
-    status: "lobby",
-    currentIndex: 0,
-    answers: {},
-    ready: {}
-  });
+  refStart.set(null);
+  refGame.set({ status: "lobby", currentIndex: 0, answers: {}, ready: {} });
 });
 
-let lastRenderedIndex = -1;
+refStart.on("value", (snap) => {
+  const data = snap.val() || {};
+  const iStarted = !!data[currentPlayer];
+  const theyStarted = !!data[otherPlayer];
 
+  startBtn.disabled = iStarted;
+  if (!iStarted) {
+    startWaiting.textContent = "";
+  } else {
+    startWaiting.textContent = theyStarted
+      ? "Iniciando..."
+      : `Esperando a que ${CREDENTIALS[otherPlayer] ? CREDENTIALS[otherPlayer].name : ""} le dé a Comenzar...`;
+  }
+
+  if (iStarted && theyStarted) {
+    refGame.transaction((current) => {
+      if (current && current.status !== "lobby") return; // ya se transicionó, no tocar
+      return { status: "playing", currentIndex: 0, answers: {}, ready: {} };
+    });
+  }
+});
+
+// ============================================================
+// JUEGO — pregunta, respuestas, revelación y avance sincronizado
+// ============================================================
 refGame.on("value", (snap) => {
   const data = snap.val();
+
   if (!data || data.status === "lobby") {
     showView("lobby");
     lastRenderedIndex = -1;
@@ -141,7 +157,7 @@ refGame.on("value", (snap) => {
   }
 
   if (data.status === "ended") {
-    renderEnd(data);
+    endSummary.textContent = "Respondieron todas las preguntas. ¡Sigan comentándolo en el chat!";
     showView("end");
     return;
   }
@@ -151,88 +167,159 @@ refGame.on("value", (snap) => {
   const idx = data.currentIndex || 0;
 
   if (idx >= QUESTIONS.length) {
-    // Alguien debe cerrar el juego (idempotente)
-    refGame.child("status").set("ended");
+    refGame.child("status").set("ended"); // idempotente
     return;
   }
 
   if (idx !== lastRenderedIndex) {
     lastRenderedIndex = idx;
-    renderQuestion(idx);
+    renderQuestionSkeleton(idx);
   }
 
-  // Actualizar texto de espera / botón según ready flags
-  const readyForRound = (data.ready && data.ready[idx]) || {};
-  const iAmReady = !!readyForRound[currentPlayer];
-  const theyAreReady = !!readyForRound[otherPlayer];
-
-  if (iAmReady) {
-    continueBtn.disabled = true;
-    waitingText.textContent = theyAreReady
-      ? "Avanzando..."
-      : `Esperando a ${CREDENTIALS[otherPlayer].name}...`;
-  } else {
-    waitingText.textContent = "";
-  }
-
-  // Avance sincronizado: si ambos están listos, intenta avanzar (transacción segura)
-  if (iAmReady && theyAreReady) {
-    refGame.child("currentIndex").transaction((current) => {
-      if (current === idx) return idx + 1;
-      return; // ya avanzó, no hacer nada
-    });
-  }
+  applyRoundState(idx, data);
 });
 
-function renderQuestion(idx) {
+function renderQuestionSkeleton(idx) {
   const q = QUESTIONS[idx];
   qCount.textContent = `Pregunta ${idx + 1} de ${QUESTIONS.length}`;
   questionText.textContent = q.question;
   answersGrid.innerHTML = "";
-  selectedOption = null;
-  hasAnsweredThisRound = false;
-  continueBtn.disabled = true;
+  revealPanel.classList.add("hidden");
+  revealPanel.innerHTML = "";
   waitingText.textContent = "";
+  continueBtn.disabled = true;
 
   q.options.forEach((optText, optIdx) => {
     const btn = document.createElement("button");
     btn.className = "answer-btn";
     btn.textContent = optText;
-    btn.addEventListener("click", () => selectAnswer(idx, optIdx, btn));
+    btn.dataset.index = optIdx;
+    btn.addEventListener("click", () => {
+      submitAnswer(idx, { type: "preset", index: optIdx });
+    });
     answersGrid.appendChild(btn);
   });
+
+  // 4ta opción: respuesta personalizada
+  const customRow = document.createElement("div");
+  customRow.className = "custom-answer-row";
+  customRow.id = "custom-answer-row";
+  const input = document.createElement("input");
+  input.type = "text";
+  input.id = "custom-answer-input";
+  input.placeholder = "Escribe tu propia respuesta...";
+  input.maxLength = 80;
+  const submitBtn = document.createElement("button");
+  submitBtn.type = "button";
+  submitBtn.className = "btn btn-primary";
+  submitBtn.id = "custom-answer-submit";
+  submitBtn.textContent = "OK";
+  const submitCustom = () => {
+    const text = input.value.trim();
+    if (!text) return;
+    submitAnswer(idx, { type: "custom", text });
+  };
+  submitBtn.addEventListener("click", submitCustom);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") submitCustom();
+  });
+  customRow.appendChild(input);
+  customRow.appendChild(submitBtn);
+  answersGrid.appendChild(customRow);
 }
 
-function selectAnswer(idx, optIdx, btnEl) {
-  if (hasAnsweredThisRound) return; // ya confirmó (le dio a Continuar)
-  selectedOption = optIdx;
-  [...answersGrid.children].forEach((b) => b.classList.remove("selected"));
-  btnEl.classList.add("selected");
-  continueBtn.disabled = false;
+function submitAnswer(idx, answerObj) {
+  refGame.child("answers").child(idx).child(currentPlayer).set(answerObj);
+}
 
-  refGame.child("answers").child(idx).child(currentPlayer).set(optIdx);
+function applyRoundState(idx, data) {
+  const round = (data.answers && data.answers[idx]) || {};
+  const myAns = round[currentPlayer];
+  const theirAns = round[otherPlayer];
+  const locked = myAns !== undefined && myAns !== null;
+  const bothAnswered = locked && theirAns !== undefined && theirAns !== null;
+
+  const presetBtns = answersGrid.querySelectorAll(".answer-btn");
+  const customInput = document.getElementById("custom-answer-input");
+  const customSubmit = document.getElementById("custom-answer-submit");
+  const customRow = document.getElementById("custom-answer-row");
+
+  presetBtns.forEach((btn) => {
+    btn.disabled = locked;
+    const isMine = myAns && myAns.type === "preset" && Number(btn.dataset.index) === myAns.index;
+    btn.classList.toggle("selected", !!isMine);
+  });
+  if (customInput) {
+    customInput.disabled = locked;
+    customSubmit.disabled = locked;
+    const isMine = myAns && myAns.type === "custom";
+    customRow.classList.toggle("selected", !!isMine);
+    if (isMine && document.activeElement !== customInput) customInput.value = myAns.text;
+  }
+
+  const readyRound = (data.ready && data.ready[idx]) || {};
+  const iReady = !!readyRound[currentPlayer];
+  const theyReady = !!readyRound[otherPlayer];
+
+  if (!bothAnswered) {
+    revealPanel.classList.add("hidden");
+    continueBtn.disabled = true;
+    waitingText.textContent = locked
+      ? `Esperando la respuesta de ${CREDENTIALS[otherPlayer].name}...`
+      : "";
+    return;
+  }
+
+  // Ambos respondieron: mostrar revelación
+  renderReveal(idx, round);
+  revealPanel.classList.remove("hidden");
+
+  if (iReady) {
+    continueBtn.disabled = true;
+    waitingText.textContent = theyReady
+      ? "Avanzando..."
+      : `Esperando a que ${CREDENTIALS[otherPlayer].name} le dé a Continuar...`;
+  } else {
+    continueBtn.disabled = false;
+    waitingText.textContent = "Coméntenlo en el chat cuando quieran.";
+  }
+
+  if (iReady && theyReady) {
+    refGame.child("currentIndex").transaction((current) => {
+      if (current === idx) return idx + 1;
+      return; // ya avanzó
+    });
+  }
+}
+
+function renderReveal(idx, round) {
+  revealPanel.innerHTML = "";
+  [currentPlayer, otherPlayer].forEach((p) => {
+    const ans = round[p];
+    if (!ans) return;
+    const text = ans.type === "custom" ? ans.text : QUESTIONS[idx].options[ans.index];
+
+    const row = document.createElement("div");
+    row.className = `reveal-row reveal-${p}`;
+
+    const name = document.createElement("span");
+    name.className = "reveal-name";
+    name.textContent = CREDENTIALS[p].name;
+
+    const textEl = document.createElement("span");
+    textEl.className = "reveal-text";
+    textEl.textContent = text;
+
+    row.appendChild(name);
+    row.appendChild(textEl);
+    revealPanel.appendChild(row);
+  });
 }
 
 continueBtn.addEventListener("click", () => {
-  if (selectedOption === null || hasAnsweredThisRound) return;
-  hasAnsweredThisRound = true;
-  const idx = lastRenderedIndex;
-  [...answersGrid.children].forEach((b) => (b.disabled = true));
-  refGame.child("ready").child(idx).child(currentPlayer).set(true);
+  if (continueBtn.disabled) return;
+  refGame.child("ready").child(lastRenderedIndex).child(currentPlayer).set(true);
 });
-
-function renderEnd(data) {
-  const answers = data.answers || {};
-  let myScore = 0;
-  let theirScore = 0;
-  QUESTIONS.forEach((q, i) => {
-    const round = answers[i] || {};
-    if (round[currentPlayer] === q.correct) myScore++;
-    if (round[otherPlayer] === q.correct) theirScore++;
-  });
-  endSummary.textContent =
-    `${CREDENTIALS[currentPlayer].name}: ${myScore} · ${CREDENTIALS[otherPlayer].name}: ${theirScore} (de ${QUESTIONS.length})`;
-}
 
 // ============================================================
 // CHAT
@@ -263,19 +350,34 @@ chatForm.addEventListener("submit", (e) => {
 
 refChat.on("child_added", (snap) => {
   const msg = snap.val();
+  const senderInfo = CREDENTIALS[msg.sender];
+  const isMine = msg.sender === currentPlayer;
+
+  const bubbleWrap = document.createElement("div");
+  bubbleWrap.className = `chat-msg ${msg.sender} ${isMine ? "mine" : "theirs"}`;
+
+  const avatar = document.createElement("span");
+  avatar.className = "chat-avatar";
+  avatar.textContent = senderInfo ? senderInfo.name.charAt(0) : "?";
+
   const bubble = document.createElement("div");
-  bubble.className = "chat-msg " + (msg.sender === currentPlayer ? "mine" : "theirs");
+  bubble.className = "chat-bubble";
+
   const author = document.createElement("span");
   author.className = "chat-msg-author";
-  author.textContent = CREDENTIALS[msg.sender] ? CREDENTIALS[msg.sender].name : msg.sender;
+  author.textContent = senderInfo ? senderInfo.name : msg.sender;
+
   const body = document.createElement("span");
   body.textContent = msg.text;
+
   bubble.appendChild(author);
   bubble.appendChild(body);
-  chatMessages.appendChild(bubble);
+  bubbleWrap.appendChild(avatar);
+  bubbleWrap.appendChild(bubble);
+  chatMessages.appendChild(bubbleWrap);
   chatMessages.scrollTop = chatMessages.scrollHeight;
 
-  if (!chatOverlay.classList.contains("open") && msg.sender !== currentPlayer) {
+  if (!chatOverlay.classList.contains("open") && !isMine) {
     chatBadge.classList.remove("hidden");
   }
 });
