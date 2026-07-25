@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Duelo de Preguntas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ PANTALLA DE LOGIN ============ -->
+<div id="login-screen" class="screen active">
+  <div class="login-card">
+    <div class="login-brand">
+      <span class="login-brand-mark">?</span>
+      <h1>Duelo de Preguntas</h1>
+      <p class="login-sub">Inicia sesión para jugar</p>
+    </div>
+    <form id="login-form">
+      <label class="field">
+        <span>Usuario</span>
+        <input id="login-user" type="text" autocomplete="username" placeholder="Paul o Claudia" required>
+      </label>
+      <label class="field">
+        <span>Contraseña</span>
+        <input id="login-pass" type="password" autocomplete="current-password" placeholder="••••••" required>
+      </label>
+      <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+      <p id="login-error" class="login-error"></p>
+    </form>
+  </div>
+</div>
+
+<!-- ============ APP PRINCIPAL (post-login) ============ -->
+<div id="main-ui" class="hidden">
+
+  <!-- Riel de presencia (jugadores) -->
+  <aside class="players-rail">
+    <div class="player-orb" id="orb-paul" data-player="paul">
+      <span class="orb-initial">P</span>
+      <span class="orb-pulse"></span>
+    </div>
+    <div class="player-orb" id="orb-claudia" data-player="claudia">
+      <span class="orb-initial">C</span>
+      <span class="orb-pulse"></span>
+    </div>
+  </aside>
+
+  <!-- Botón flotante de chat -->
+  <button id="chat-toggle" class="chat-fab" aria-label="Abrir chat">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M4 4h16v11H7l-3 3V4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+    </svg>
+    <span id="chat-badge" class="chat-badge hidden">•</span>
+  </button>
+
+  <!-- Vista: Lobby -->
+  <section id="lobby-view" class="view active">
+    <div class="lobby-content">
+      <p class="eyebrow">Sesión lista</p>
+      <h2>¿Empezamos?</h2>
+      <p class="lobby-hint">Cuando cualquiera de los dos le dé, comienza para ambos.</p>
+      <button id="start-btn" class="btn btn-primary btn-lg">Comenzar</button>
+    </div>
+  </section>
+
+  <!-- Vista: Juego -->
+  <section id="game-view" class="view">
+    <div class="game-content">
+      <div class="game-topbar">
+        <span id="q-count" class="q-count"></span>
+      </div>
+      <h2 id="question-text" class="question-text"></h2>
+      <div id="answers-grid" class="answers-grid"></div>
+      <div class="game-footer">
+        <p id="waiting-text" class="waiting-text"></p>
+        <button id="continue-btn" class="btn btn-primary" disabled>Continuar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Vista: Fin del juego -->
+  <section id="end-view" class="view">
+    <div class="lobby-content">
+      <p class="eyebrow">Partida terminada</p>
+      <h2>¡Eso fue todo!</h2>
+      <p class="lobby-hint" id="end-summary"></p>
+      <button id="restart-btn" class="btn btn-primary btn-lg">Jugar de nuevo</button>
+    </div>
+  </section>
+
+</div>
+
+<!-- ============ CHAT (panel deslizante) ============ -->
+<div id="chat-overlay" class="chat-overlay">
+  <div class="chat-dim" id="chat-dim"></div>
+  <div class="chat-panel" id="chat-panel">
+    <div class="chat-header">
+      <span>Chat</span>
+      <button id="chat-close" class="chat-close" aria-label="Cerrar chat">✕</button>
+    </div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <form id="chat-form" class="chat-form">
+      <input id="chat-input" type="text" placeholder="Escribe un mensaje..." autocomplete="off">
+      <button type="submit" class="btn btn-primary">Enviar</button>
+    </form>
+  </div>
+</div>
+
+<!-- Firebase (compat, más simple de usar) -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+
+<script src="firebase-config.js"></script>
+<script src="questions.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
