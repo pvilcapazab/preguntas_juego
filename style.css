@@ -167,6 +167,16 @@ input{ font-family: inherit; }
   background: var(--danger); color:transparent; font-size:0;
 }
 
+.reset-fab{
+  position: fixed; top: 24px; right: 84px; z-index: 30;
+  width:48px; height:48px; border-radius:50%;
+  background: var(--surface); border:1px solid var(--border);
+  color: var(--muted); display:flex; align-items:center; justify-content:center;
+  box-shadow: 0 10px 26px -10px #000a;
+}
+.reset-fab svg{ width:20px; height:20px; }
+.reset-fab:hover{ background: var(--surface-2); color: var(--danger); border-color: var(--danger); }
+
 /* ---------- Juego ---------- */
 .q-count{ color: var(--muted); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
 .question-text{ font-size: 26px; margin: 14px 0 30px; line-height:1.35; }
@@ -306,6 +316,7 @@ input{ font-family: inherit; }
   .players-rail{ left: 10px; gap: 12px; }
   .player-orb{ width:36px; height:36px; font-size:12px; }
   .chat-fab{ top: 16px; right: 16px; }
+  .reset-fab{ top: 16px; right: 70px; }
   .answers-grid{ grid-template-columns: 1fr; }
   .question-text{ font-size: 21px; }
 }
