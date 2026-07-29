@@ -48,6 +48,8 @@ const chatInput = document.getElementById("chat-input");
 const chatMessages = document.getElementById("chat-messages");
 const chatBadge = document.getElementById("chat-badge");
 
+const resetAllBtn = document.getElementById("reset-all-btn");
+
 const orbPaul = document.getElementById("orb-paul");
 const orbClaudia = document.getElementById("orb-claudia");
 
@@ -83,6 +85,10 @@ function login(playerKey) {
   loginScreen.classList.remove("active");
   mainUI.classList.remove("hidden");
   loginError.textContent = "";
+
+  if (currentPlayer === "paul") {
+    resetAllBtn.classList.remove("hidden");
+  }
 }
 
 const savedPlayer = localStorage.getItem("dp_player");
@@ -117,10 +123,18 @@ startBtn.addEventListener("click", () => {
   refStart.child(currentPlayer).set(true);
 });
 
-restartBtn.addEventListener("click", () => {
+restartBtn.addEventListener("click", resetGame);
+
+resetAllBtn.addEventListener("click", () => {
+  if (confirm("¿Reiniciar el juego para los dos desde el inicio?")) {
+    resetGame();
+  }
+});
+
+function resetGame() {
   refStart.set(null);
   refGame.set({ status: "lobby", currentIndex: 0, answers: {}, ready: {} });
-});
+}
 
 refStart.on("value", (snap) => {
   const data = snap.val() || {};
