@@ -7,43 +7,31 @@
 // ============================================================
 const QUESTIONS = [
   {
-    question: "¿Cuál creen que fue el mejor momento de esta semana?",
-    options: ["Una comida juntos", "Un rato viendo algo", "Un mensaje o llamada"]
+    question: "¿Si alguien más te ofreciera la relación perfecta, me dejarías?",
+    options: ["No, elijo lo que estamos construyendo", "La perfección no existe, me quedo contigo", "Lo pensaría, pero me quedaría"]
   },
   {
-    question: "Si pudieran viajar a cualquier lugar ahora mismo, ¿a dónde irían?",
-    options: ["A la playa", "A las montañas", "A otra ciudad"]
+    question: "¿Alguna vez has pensado en irte? Si es así, ¿qué te detuvo?",
+    options: ["Nunca lo he pensado", "El amor que te tengo", "Nuestros buenos momentos y promesas"]
   },
   {
-    question: "¿Qué plan les gustaría hacer el próximo fin de semana?",
-    options: ["Salir a comer", "Quedarse en casa", "Ver algo nuevo juntos"]
+    question: "¿Qué es lo más difícil de quererme?",
+    options: ["Nuestras diferencias de carácter", "Los problemas de comunicación a veces", "Nada, es muy fácil quererte"]
   },
   {
-    question: "¿Cuál es el mejor recuerdo que tienen juntos?",
-    options: ["Un viaje", "Una cena", "Una sorpresa"]
+    question: "¿Sientes que eres feliz conmigo o hay algo que te falta?",
+    options: ["Soy muy feliz, no me falta nada", "Soy feliz, pero siempre podemos mejorar juntos", "A veces siento que nos falta más tiempo"]
   },
   {
-    question: "¿Qué los hace reír más al otro?",
-    options: ["Un chiste tonto", "Una imitación", "Algo inesperado"]
+    question: "¿Cuál es el miedo más grande que tienes de nuestro futuro juntos?",
+    options: ["Que la rutina nos termine apagando", "Alejarnos poco a poco sin darnos cuenta", "No lograr entendernos en los momentos difíciles"]
   },
   {
-    question: "¿Qué extrañan más cuando no se ven?",
-    options: ["Hablar en persona", "Un abrazo", "Hacer algo juntos"]
+    question: "¿Hay algo que tienes miedo de decirme por temor a cómo podría reaccionar?",
+    options: ["No, siento que puedo decirte todo", "A veces prefiero callar para evitar discusiones", "Sí, algunas cosas que prefiero guardarme"]
   },
   {
-    question: "¿Cuál creen que es la comida favorita del otro?",
-    options: ["Algo dulce", "Algo salado", "Comida casera"]
-  },
-  {
-    question: "¿Qué canción les recuerda al otro?",
-    options: ["Una lenta", "Una alegre", "Una que cantaron juntos"]
-  },
-  {
-    question: "¿Qué les gustaría aprender juntos algún día?",
-    options: ["Un idioma", "Un baile", "Un deporte"]
-  },
-  {
-    question: "¿Cómo se imaginan dentro de 5 años?",
-    options: ["Viajando más", "En un lugar propio", "Igual de bien que ahora"]
+    question: "Si pudieras cambiar una sola cosa de nuestra relación sin herirme, ¿qué sería?",
+    options: ["Pasaríamos más tiempo de calidad juntos", "Mejoraríamos la forma en que nos comunicamos", "No cambiaría absolutamente nada"]
   }
 ];
